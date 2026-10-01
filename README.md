@@ -21,3 +21,8 @@ Os códigos aprendidos são armazenados no volume persistente do App (`/data/cus
 
 ## 0.3.4
 Controles personalizados são independentes dos controles de catálogo. Ao criar, escolha o tipo do equipamento; para DIY, informe também um tipo de referência. O aprendizado da primeira tecla inicia imediatamente e o controle DIY é persistido na Tuya usando a API oficial de Learning Codes.
+
+## 0.3.5 — Catálogo x Personalizados
+- **Adicionar do catálogo**: usa biblioteca Tuya; para AC usa marca + índice e comandos estruturados.
+- **Personalizados**: todos os tipos, inclusive Ar-condicionado, são criados do zero e aprendidos tecla por tecla.
+- O tipo escolhido no personalizado é apenas classificação/referência; não redireciona ao catálogo.

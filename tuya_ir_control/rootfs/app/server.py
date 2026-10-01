@@ -12,7 +12,17 @@ def opts():
     except Exception: return {}
 
 def load_store():
-    try: return json.loads(DATA.read_text())
+    try:
+        data=json.loads(DATA.read_text())
+        if not isinstance(data,dict): data={'controls':[]}
+        data.setdefault('controls',[])
+        # Each custom control is independent. Never merge/deduplicate by category_id.
+        seen=set()
+        for c in data['controls']:
+            if not c.get('id') or c.get('id') in seen: c['id']=uuid.uuid4().hex
+            seen.add(c['id'])
+            c.setdefault('keys',[])
+        return data
     except Exception: return {'controls':[]}
 
 def save_store(x):
