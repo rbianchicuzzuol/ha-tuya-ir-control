@@ -1,7 +1,7 @@
 name: Tuya IR Control
-version: "0.3.2"
+version: "0.3.3"
 slug: tuya_ir_control
-description: Interface moderna para controles IR Tuya, catálogo e controles personalizados com aprendizado.
+description: Interface moderna para controles IR Tuya, catálogo, assistente de ar-condicionado e controles personalizados com aprendizado.
 url: https://github.com/SEU_USUARIO/ha-tuya-ir-control
 arch:
   - amd64

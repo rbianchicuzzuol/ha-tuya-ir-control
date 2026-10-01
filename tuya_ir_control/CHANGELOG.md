@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.3.3
+- Novo assistente dedicado para ar-condicionado via biblioteca Tuya: marca, índices, teste e vínculo.
+- Ar-condicionado deixa de usar aprendizado bruto quando escolhido como tipo.
+- Testes estruturados de Power, temperatura, modo e ventilação antes de adicionar.
+- Tela dedicada para controles AC vinculados.
+- DIY e demais controles aprendidos continuam separados e compatíveis com dados da 0.3.2.
+
+
 ## 0.3.2
 - Corrige o botão Fechar dos modais (conflito com `window.close`).
 - Controles personalizados agora são criados do zero, sem escolher um controle Tuya existente como base.

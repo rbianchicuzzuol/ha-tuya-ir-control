@@ -1,4 +1,4 @@
-# Tuya IR Control 0.3.2
+# Tuya IR Control 0.3.3
 
 Home Assistant App com Ingress. Gerencia controles Tuya existentes e controles personalizados separados.
 

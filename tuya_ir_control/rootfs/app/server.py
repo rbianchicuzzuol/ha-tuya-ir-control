@@ -52,6 +52,8 @@ class Tuya:
     async def brands(self,c): return await self.request('GET',f'/v2.0/infrareds/{self.device}/categories/{c}/brands')
     async def indexes(self,c,b): return await self.request('GET',f'/v2.0/infrareds/{self.device}/categories/{c}/brands/{b}/remote-indexs')
     async def add_remote(self,p): return await self.request('POST',f'/v2.0/infrareds/{self.device}/remotes',p)
+    async def ac_test(self,p): return await self.request('POST',f'/v2.0/infrareds/{self.device}/air-conditioners/testing/command',p)
+    async def ac_command(self,r,code,value): return await self.request('POST',f'/v2.0/infrareds/{self.device}/air-conditioners/{r}/command',{'code':code,'value':value})
     async def rename(self,r,n): return await self.request('PUT',f'/v2.0/infrareds/{self.device}/remotes/{r}',{'remote_name':n})
     async def delete(self,r): return await self.request('DELETE',f'/v2.0/infrareds/{self.device}/remotes/{r}')
 
@@ -184,6 +186,18 @@ async def catalog(req):
         else:raise RuntimeError('Ação inválida')
         return ok(z)
     except Exception as e:return err(e)
+
+async def ac_test(req):
+    try:
+        x=await req.json()
+        p={'remote_index':int(x['remote_index']),'category_id':int(x['category_id']),'code':x.get('code','power'),'value':x.get('value',1)}
+        return ok(await T.ac_test(p))
+    except Exception as e:return err(e)
+async def ac_command(req):
+    try:
+        x=await req.json(); return ok(await T.ac_command(req.match_info['rid'],x['code'],x.get('value')))
+    except Exception as e:return err(e)
+
 async def remote_add(req):
     try:return ok(await T.add_remote(await req.json()))
     except Exception as e:return err(e)
@@ -197,5 +211,5 @@ async def remote_action(req):
     except Exception as e:return err(e)
 
 app=web.Application()
-app.add_routes([web.get('/',index),web.get('/health',health),web.get('/api/state',state),web.get('/api/remotes/{rid}/keys',remote_details),web.post('/api/send',send_catalog),web.post('/api/raw/send',raw_send),web.post('/api/learning/start',learn_start),web.get('/api/learning/read',learn_read),web.post('/api/learning/stop',learn_stop),web.post('/api/custom',custom_create),web.post('/api/custom/{cid}/rename',custom_rename),web.delete('/api/custom/{cid}',custom_delete),web.post('/api/custom/{cid}/test',custom_test),web.post('/api/custom/{cid}/keys',key_save),web.post('/api/custom/{cid}/keys/{kid}',key_action),web.get('/api/catalog',catalog),web.post('/api/remotes',remote_add),web.post('/api/remotes/{rid}',remote_action)])
+app.add_routes([web.get('/',index),web.get('/health',health),web.get('/api/state',state),web.get('/api/remotes/{rid}/keys',remote_details),web.post('/api/send',send_catalog),web.post('/api/raw/send',raw_send),web.post('/api/learning/start',learn_start),web.get('/api/learning/read',learn_read),web.post('/api/learning/stop',learn_stop),web.post('/api/custom',custom_create),web.post('/api/custom/{cid}/rename',custom_rename),web.delete('/api/custom/{cid}',custom_delete),web.post('/api/custom/{cid}/test',custom_test),web.post('/api/custom/{cid}/keys',key_save),web.post('/api/custom/{cid}/keys/{kid}',key_action),web.get('/api/catalog',catalog),web.post('/api/remotes',remote_add),web.post('/api/ac/test',ac_test),web.post('/api/ac/{rid}/command',ac_command),web.post('/api/remotes/{rid}',remote_action)])
 web.run_app(app,host='0.0.0.0',port=8099)
