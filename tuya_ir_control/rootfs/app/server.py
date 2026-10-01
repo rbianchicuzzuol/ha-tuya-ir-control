@@ -90,7 +90,9 @@ async def state(req):
     try:
         if not T.configured(): return ok({'configured':False,'controls':load_store()['controls'],'remotes':[]})
         rs=await T.remotes() or []
-        return ok({'configured':True,'device_id':T.device,'remotes':rs,'controls':load_store()['controls']})
+        store=load_store(); linked={str(c.get('remote_id')) for c in store['controls'] if c.get('protocol')=='ac_structured' and c.get('remote_id')}
+        rs=[r for r in rs if str(r.get('remote_id')) not in linked]
+        return ok({'configured':True,'device_id':T.device,'remotes':rs,'controls':store['controls']})
     except Exception as e:return err(e)
 async def remote_details(req):
     try:
@@ -118,7 +120,7 @@ async def raw_send(req):
 async def custom_create(req):
     try:
         x=await req.json(); s=load_store()
-        c={'id':uuid.uuid4().hex,'name':x['name'].strip(),'type':x.get('type','DIY'),'reference_type':x.get('reference_type') or x.get('type','DIY'),'category_id':x.get('category_id'),'remote_id':None,'keys':[]}
+        c={'id':uuid.uuid4().hex,'name':x['name'].strip(),'type':x.get('type','DIY'),'reference_type':x.get('reference_type') or x.get('type','DIY'),'category_id':x.get('category_id'),'remote_id':x.get('remote_id'),'protocol':x.get('protocol','raw'),'brand_id':x.get('brand_id'),'brand_name':x.get('brand_name'),'remote_index':x.get('remote_index'),'keys':[]}
         s['controls'].append(c); save_store(s); return ok(c)
     except Exception as e:return err(e)
 async def custom_delete(req):
@@ -176,16 +178,38 @@ async def key_action(req):
             if c['id']!=cid:continue
             for k in c['keys']:
                 if k['id']==kid:
-                    if x.get('action')=='send': return ok(await T.send_raw(c['remote_id'],k['code']))
+                    if x.get('action')=='send':
+                        if c.get('protocol')=='ac_structured' or k.get('kind')=='ac': return ok(await T.ac_command(c['remote_id'],k['code'],k.get('value')))
+                        return ok(await T.send_raw(c['remote_id'],k['code']))
                     if x.get('action')=='rename': k['name']=x['name'].strip(); k['key']=k['name']
                     if x.get('action')=='replace': k['code']=x['code']
                     if x.get('action') in ('rename','replace'):
-                        await T.update_learning(c['remote_id'],learning_payload(c)); save_store(s); return ok(k)
+                        if c.get('protocol')!='ac_structured': await T.update_learning(c['remote_id'],learning_payload(c))
+                        save_store(s); return ok(k)
             if x.get('action')=='delete':
                 c['keys']=[k for k in c['keys'] if k['id']!=kid]
-                if c.get('remote_id') and c['keys']: await T.update_learning(c['remote_id'],learning_payload(c))
+                if c.get('protocol')!='ac_structured' and c.get('remote_id') and c['keys']: await T.update_learning(c['remote_id'],learning_payload(c))
                 save_store(s); return ok()
         return err('Tecla não encontrada',404)
+    except Exception as e:return err(e)
+async def custom_ac_setup(req):
+    try:
+        x=await req.json()
+        payload={'category_id':5,'brand_id':int(x['brand_id']),'remote_index':int(x['remote_index']),'remote_name':x['name'].strip()}
+        z=await T.add_remote(payload)
+        rid=z
+        if isinstance(rid,dict): rid=rid.get('remote_id') or rid.get('id') or rid.get('result')
+        if isinstance(rid,dict): rid=rid.get('remote_id') or rid.get('id')
+        if not rid: raise RuntimeError(f'A Tuya não retornou remote_id ao adicionar o AC: {z}')
+        s=load_store(); c={'id':uuid.uuid4().hex,'name':x['name'].strip(),'type':'Ar-condicionado','reference_type':'Ar-condicionado','category_id':5,'remote_id':str(rid),'protocol':'ac_structured','brand_id':int(x['brand_id']),'brand_name':x.get('brand_name'),'remote_index':int(x['remote_index']),'keys':[]}
+        s['controls'].append(c); save_store(s); return ok(c)
+    except Exception as e:return err(e)
+async def custom_ac_key(req):
+    try:
+        x=await req.json(); s=load_store(); c=next((z for z in s['controls'] if z['id']==req.match_info['cid']),None)
+        if not c or c.get('protocol')!='ac_structured': return err('Controle AC personalizado não encontrado',404)
+        k={'id':uuid.uuid4().hex,'name':x['name'].strip(),'kind':'ac','code':x['code'],'value':x.get('value')}
+        c['keys'].append(k); save_store(s); return ok(k)
     except Exception as e:return err(e)
 async def catalog(req):
     try:
@@ -221,5 +245,5 @@ async def remote_action(req):
     except Exception as e:return err(e)
 
 app=web.Application()
-app.add_routes([web.get('/',index),web.get('/health',health),web.get('/api/state',state),web.get('/api/remotes/{rid}/keys',remote_details),web.post('/api/send',send_catalog),web.post('/api/raw/send',raw_send),web.post('/api/learning/start',learn_start),web.get('/api/learning/read',learn_read),web.post('/api/learning/stop',learn_stop),web.post('/api/custom',custom_create),web.post('/api/custom/{cid}/rename',custom_rename),web.delete('/api/custom/{cid}',custom_delete),web.post('/api/custom/{cid}/test',custom_test),web.post('/api/custom/{cid}/keys',key_save),web.post('/api/custom/{cid}/keys/{kid}',key_action),web.get('/api/catalog',catalog),web.post('/api/remotes',remote_add),web.post('/api/ac/test',ac_test),web.post('/api/ac/{rid}/command',ac_command),web.post('/api/remotes/{rid}',remote_action)])
+app.add_routes([web.get('/',index),web.get('/health',health),web.get('/api/state',state),web.get('/api/remotes/{rid}/keys',remote_details),web.post('/api/send',send_catalog),web.post('/api/raw/send',raw_send),web.post('/api/learning/start',learn_start),web.get('/api/learning/read',learn_read),web.post('/api/learning/stop',learn_stop),web.post('/api/custom',custom_create),web.post('/api/custom/{cid}/rename',custom_rename),web.delete('/api/custom/{cid}',custom_delete),web.post('/api/custom/{cid}/test',custom_test),web.post('/api/custom/{cid}/keys',key_save),web.post('/api/custom/{cid}/ac-keys',custom_ac_key),web.post('/api/custom/ac/setup',custom_ac_setup),web.post('/api/custom/{cid}/keys/{kid}',key_action),web.get('/api/catalog',catalog),web.post('/api/remotes',remote_add),web.post('/api/ac/test',ac_test),web.post('/api/ac/{rid}/command',ac_command),web.post('/api/remotes/{rid}',remote_action)])
 web.run_app(app,host='0.0.0.0',port=8099)

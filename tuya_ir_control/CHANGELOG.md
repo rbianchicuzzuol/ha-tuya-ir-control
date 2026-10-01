@@ -1,3 +1,9 @@
+## 0.3.6
+- Restaura Remover nos controles de catálogo.
+- AC personalizado passa a usar biblioteca AC estruturada e permite montar teclas personalizadas sem aprendizado bruto.
+- DIY e demais personalizados mantêm aprendizado IR bruto.
+- Controles AC vinculados a personalizados não aparecem duplicados em Configurados.
+
 # Changelog
 
 ## 0.3.5
