@@ -1,3 +1,7 @@
+## 0.3.4
+- Corrige descoberta de Ar-condicionado usando o category_id oficial 5, sem depender do nome/localização retornado pela Tuya.
+- Mantém o assistente AC por catálogo e normaliza o ID para os comandos de teste.
+
 # Changelog
 
 ## 0.3.3

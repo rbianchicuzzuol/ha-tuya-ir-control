@@ -19,5 +19,5 @@ O App funciona diretamente com a Tuya e não depende da integração para sua in
 ## Controles personalizados
 Os códigos aprendidos são armazenados no volume persistente do App (`/data/custom_controls.json`). Eles não são misturados com os controles de catálogo Tuya. Ao criar um controle personalizado, escolha um controle Tuya existente como transporte para retransmitir os códigos aprendidos.
 
-## 0.3.3
+## 0.3.4
 Controles personalizados são independentes dos controles de catálogo. Ao criar, escolha o tipo do equipamento; para DIY, informe também um tipo de referência. O aprendizado da primeira tecla inicia imediatamente e o controle DIY é persistido na Tuya usando a API oficial de Learning Codes.
