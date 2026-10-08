@@ -15,7 +15,7 @@ ingress_port: 8099
 panel_icon: mdi:remote
 panel_title: Tuya IR Control
 panel_admin: true
-stage: experimental
+stage: stable
 watchdog: http://[HOST]:[PORT:8099]/health
 services:
   - mqtt:want
