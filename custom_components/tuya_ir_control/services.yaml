@@ -1,6 +1,0 @@
-refresh_remotes:
-  name: Refresh remotes
-  description: Reload the integration to discover remote changes.
-start_learning:
-  name: Start IR learning
-  fields: {}
